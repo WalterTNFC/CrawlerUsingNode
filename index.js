@@ -5,20 +5,21 @@ const fs = require("fs");
 
 const companyName = "jusbrasil";
 // const url = `https://${companyName}.guppy.io`;
-// const url = `https://jobs.lever.co/${companyName}`
-const url = `https://boards.greenhouse.io/${companyName}`
+// const url = `https://jobs.lever.co/${companyName}`;
+// const url = `https://boards.greenhouse.io/${companyName}`;
+const url = 'https://jobs.kenoby.com/britvicebba/position?search=&';
 
 const options = {
   uri: url,
   transform: function (body) {
-    return cheerio.load(body)
+    return cheerio.load(body);
   }
 }
 
 async function processarDados(dados){
   //salva no banco de dados
   console.log(JSON.stringify(dados))
-  fs.writeFile("processosGreenhouse.json", JSON.stringify(dados), err => {
+  fs.writeFile("processosKenoby.json", JSON.stringify(dados), err => {
      
     // Checking for errors
     if (err) throw err; 
@@ -30,7 +31,7 @@ async function processarDados(dados){
 function crawlerToGupy() {
   rp(options)
   .then(($) => {
-    const processos = []
+    const processos = [];
     $('.sc-7dc8e42e-2').each((i, item) => {
       link = `${url}${$(item).find('a').prop('href')}`
       console.log(link)
@@ -42,9 +43,9 @@ function crawlerToGupy() {
       }
 
       if(processo.nm_vaga !== "")
-        processos.push(processo)
+        processos.push(processo);
     })
-    processarDados(processos)
+    processarDados(processos);
   })
   .catch((err) => {
     console.log(err)
@@ -54,7 +55,7 @@ function crawlerToGupy() {
 function crawlerToLever() {
   rp(options)
   .then(($) => {
-    const processos = []
+    const processos = [];
     $('.posting').each((i, item) => {
       link = $(item).find('a').prop('href');
       console.log(link)
@@ -66,12 +67,12 @@ function crawlerToLever() {
       }
 
       if(processo.nm_vaga !== "")
-        processos.push(processo)
+        processos.push(processo);
     })
-    processarDados(processos)
+    processarDados(processos);
   })
   .catch((err) => {
-    console.log(err)
+    console.log(err);
   })
 }
 
@@ -81,7 +82,7 @@ function crawlerToGreenhouse() {
     const processos = []
     $('.level-0').each((i, item) => {
       link = `https://boards.greenhouse.io${$(item).find('a').prop('href')}`;
-      console.log(link)
+      console.log(link);
       const processo = {
         id: i+1,
         ATS: "Greenhouse",
@@ -90,22 +91,48 @@ function crawlerToGreenhouse() {
       }
 
       if(processo.nm_vaga !== "")
-        processos.push(processo)
+        processos.push(processo);
     })
-    processarDados(processos)
+    processarDados(processos);
   })
   .catch((err) => {
-    console.log(err)
+    console.log(err);
+  })
+}
+
+function crawlerToKenoby() {
+  rp(options)
+  .then(($) => {
+    const processos = []
+    $('.container').each((i, item) => {
+      link = $(item).find('a').prop('href');
+      console.log(link);
+      const processo = {
+        id: i+1,
+        ATS: "Kenoby",
+        nm_vaga: $(item).find('a').data("title"),
+        url_processo: link,
+      }
+
+      if(processo.nm_vaga !== "")
+        processos.push(processo);
+    })
+    processarDados(processos);
+  })
+  .catch((err) => {
+    console.log(err);
   })
 }
 
 
 if (url.includes("gupy")) {
-  crawlerToGupy()
+  crawlerToGupy();
 } else if (url.includes("lever")) {
-  crawlerToLever()
+  crawlerToLever();
 } else if (url.includes("greenhouse")) {
-  crawlerToGreenhouse()
+  crawlerToGreenhouse();
+} else if (url.includes("kenoby")) {
+  crawlerToKenoby(); 
 } else {
-  console.log("Empresa não crawleada")
+  console.log("Empresa não crawleada");
 }
