@@ -3,9 +3,10 @@ const rp = require('request-promise')
 const cheerio = require('cheerio')
 const fs = require("fs");
 
-const companyName = "Lend";
+const companyName = "jusbrasil";
 // const url = `https://${companyName}.guppy.io`;
-const url = `https://jobs.lever.co/${companyName}`
+// const url = `https://jobs.lever.co/${companyName}`
+const url = `https://boards.greenhouse.io/${companyName}`
 
 const options = {
   uri: url,
@@ -17,7 +18,7 @@ const options = {
 async function processarDados(dados){
   //salva no banco de dados
   console.log(JSON.stringify(dados))
-  fs.writeFile("processosLever.json", JSON.stringify(dados), err => {
+  fs.writeFile("processosGreenhouse.json", JSON.stringify(dados), err => {
      
     // Checking for errors
     if (err) throw err; 
@@ -74,11 +75,37 @@ function crawlerToLever() {
   })
 }
 
+function crawlerToGreenhouse() {
+  rp(options)
+  .then(($) => {
+    const processos = []
+    $('.level-0').each((i, item) => {
+      link = `https://boards.greenhouse.io${$(item).find('a').prop('href')}`;
+      console.log(link)
+      const processo = {
+        id: i+1,
+        ATS: "Greenhouse",
+        nm_vaga: $(item).find('a').text(),
+        url_processo: link,
+      }
+
+      if(processo.nm_vaga !== "")
+        processos.push(processo)
+    })
+    processarDados(processos)
+  })
+  .catch((err) => {
+    console.log(err)
+  })
+}
+
 
 if (url.includes("gupy")) {
   crawlerToGupy()
-}
-
-else{
+} else if (url.includes("lever")) {
   crawlerToLever()
+} else if (url.includes("greenhouse")) {
+  crawlerToGreenhouse()
+} else {
+  console.log("Empresa não crawleada")
 }
